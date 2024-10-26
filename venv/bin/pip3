@@ -1,4 +1,4 @@
-#!/Users/luyicheng/Applications/vscode/helloworld/venv/bin/python3
+#!/Users/luyicheng/Desktop/F12(訂單功能完成）/venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
