@@ -42,9 +42,6 @@ PyDispatcher==2.0.5
 PyGetWindow==0.0.9
 pyls-spyder==0.4.0
 PyMsgBox==1.0.9
-pyobjc-core==10.3.1
-pyobjc-framework-Cocoa==10.3.1
-pyobjc-framework-Quartz==10.3.1
 pyperclip==1.9.0
 PyQt5==5.15.10
 PyQtWebEngine==5.15.6
@@ -70,3 +67,4 @@ typing_extensions==4.12.2
 webencodings==0.5.1
 whitenoise==6.7.0
 wsproto==1.2.0
+setuptools>=70.0.0
