@@ -1026,7 +1026,6 @@ from selenium.webdriver.common.by import By
 from django.shortcuts import render
 import re
 from datetime import datetime
-import pyautogui
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
@@ -1198,7 +1197,7 @@ def bookingTRA(id, startStation, endStation, trainNoList1, rideDate1):
         ticketType = WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")))
         Select(ticketType).select_by_visible_text(u"全票")
 
-        pyautogui.scroll(-800)
+        
         nextBtn = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-3d')
         nextBtn.click()
 
