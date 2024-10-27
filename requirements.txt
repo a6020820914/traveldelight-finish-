@@ -37,7 +37,6 @@ ply==3.11
 protobuf==3.20.3
 psycopg2==2.9.5
 pyasn1-modules==0.2.8
-PyAutoGUI==0.9.54
 PyDispatcher==2.0.5
 PyGetWindow==0.0.9
 pyls-spyder==0.4.0
