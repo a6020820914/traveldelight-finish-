@@ -9,3 +9,4 @@ bin/
 lib/
 *.log
 .env
+staticfiles
