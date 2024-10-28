@@ -23,6 +23,6 @@ if __name__ == "__main__":
 
 #    python manage.py runserver
 #     source venv/bin/activate
-#      https://travel-delight-f8ee0dd57b83.herokuapp.com/
-#      https://git.heroku.com/travel-delight.git
+#    https://travel--delight-90e83a19f2e3.herokuapp.com/
+#      
  
