@@ -24,5 +24,5 @@ if __name__ == "__main__":
 #    python manage.py runserver
 #     source venv/bin/activate
 #    https://travel--delight-90e83a19f2e3.herokuapp.com/
-#      
+#      https://travel--delight-90e83a19f2e3.herokuapp.com/
  
