@@ -311,7 +311,7 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 6
+num_threads = 4
 workers = []
 
 """

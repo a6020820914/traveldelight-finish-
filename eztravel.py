@@ -242,7 +242,7 @@ def eztravel(Arrive, df, driver):
                     TourSpecialList.append(driver.find_element(By.CSS_SELECTOR, 'div.TourFeature_content__zz2Gu').text)
                 except:
                     TourSpecialList.append("")
-                print('report:',Arrive,'-',page, '-', x, '-TourSpecial')
+
                 GoDate=[]
                 go=True
                 n=0
@@ -267,7 +267,7 @@ def eztravel(Arrive, df, driver):
                         except:
                             go=False    
                 GoDatelist.append(GoDate)
-                print('report:',Arrive,'-',page, '-', x, '-GoDate')
+
                 try:
                     WebDriverWait(driver,20,0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.DescDetail_travelDays__0tHN9')))
                     Days=[i for i in range(1,int(driver.find_element(By.CSS_SELECTOR, 'div.DescDetail_travelDays__0tHN9').text.split(" ")[0])+1)]
@@ -288,7 +288,7 @@ def eztravel(Arrive, df, driver):
                 except:
                     Attractions=[]
                 Attractionlist.append(Attractions)
-                print('report:',Arrive,'-',page, '-', x, '-Attraction')
+
                 Breakfasts=[]
                 Lunchs=[]
                 Dinners=[]
@@ -304,7 +304,7 @@ def eztravel(Arrive, df, driver):
                 Breakfastlist.append(Breakfasts)
                 Lunchlist.append(Lunchs)
                 Dinnerlist.append(Dinners)
-                print('report:',Arrive,'-',page, '-', x, '-meals')
+
                 try:
                     WebDriverWait(driver,20,0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'article.ScheduleDay_scheduleDay__odBC9 div.HotelAndMeals_hotelAndMeals__Q6BPP div.HotelAndMeals_htl__AIyx9')))
                     Hotels=[i.text for i in driver.find_elements(By.CSS_SELECTOR, 'article.ScheduleDay_scheduleDay__odBC9 div.HotelAndMeals_hotelAndMeals__Q6BPP div.HotelAndMeals_htl__AIyx9')]
@@ -369,7 +369,7 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 10
+num_threads = 4
 workers = []
 
 df=pd.read_csv('eztravel.csv', encoding='ansi', index_col=0)

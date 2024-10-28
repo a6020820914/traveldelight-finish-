@@ -301,7 +301,7 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 10
+num_threads = 4
 workers = []
 
 df=pd.read_csv('domestic.csv', encoding='ansi', index_col=0)
