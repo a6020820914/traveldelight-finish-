@@ -34,46 +34,46 @@ region_mapping={
 """
 自動化擷取各家旅遊網站資料(多工)
 """
-# # 載入雄獅旅遊(liontravel.py)
-# def liontravelGet():
-#     import liontravel    
-# #東南旅遊
-# def settourGet():
-#     import settour
-# #五福旅遊
-# def domesticGet():
-#     import domestic
-# #易遊網
-# def eztravelGet():
-#     import eztravel
+# 載入雄獅旅遊(liontravel.py)
+def liontravelGet():
+    import liontravel    
+#東南旅遊
+def settourGet():
+    import settour
+#五福旅遊
+def domesticGet():
+    import domestic
+#易遊網
+def eztravelGet():
+    import eztravel
 
 
-# #建立執行序
-# liontravel_thread=threading.Thread(target=liontravelGet)
-# settour_thread=threading.Thread(target=settourGet)
-# domestic_thread=threading.Thread(target=domesticGet)
-# eztravel_thread=threading.Thread(target=eztravelGet)
-# # 讓開始擷取資料
-# liontravel_thread.start()
-# settour_thread.start()
-# domestic_thread.start()
-# eztravel_thread.start()
-# # 等待所有執行緒結束
-# liontravel_thread.join()
-# settour_thread.join()
-# domestic_thread.join()
-# eztravel_thread.join()
+#建立執行序
+liontravel_thread=threading.Thread(target=liontravelGet)
+settour_thread=threading.Thread(target=settourGet)
+domestic_thread=threading.Thread(target=domesticGet)
+eztravel_thread=threading.Thread(target=eztravelGet)
+# 讓開始擷取資料
+liontravel_thread.start()
+settour_thread.start()
+domestic_thread.start()
+eztravel_thread.start()
+# 等待所有執行緒結束
+liontravel_thread.join()
+settour_thread.join()
+domestic_thread.join()
+eztravel_thread.join()
 
 """
 合併成一個gettour.csv檔案
 """                        
-# #合併所有旅遊網擷取儲存的csv檔
-# liontravel_df=pd.read_csv('liontravel.csv', encoding='ansi', index_col=0)
-# settour_df=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
-# domestic_df=pd.read_csv('domestic.csv', encoding='ansi', index_col=0)
-# eztravel_df=pd.read_csv('eztravel.csv', encoding='ansi', index_col=0)
-# con = pd.concat([liontravel_df,settour_df, domestic_df, eztravel_df],ignore_index=True)
-# con.to_csv('gettour.csv',encoding='ansi',errors='ignore')
+#合併所有旅遊網擷取儲存的csv檔
+liontravel_df=pd.read_csv('liontravel.csv', encoding='ansi', index_col=0)
+settour_df=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
+domestic_df=pd.read_csv('domestic.csv', encoding='ansi', index_col=0)
+eztravel_df=pd.read_csv('eztravel.csv', encoding='ansi', index_col=0)
+con = pd.concat([liontravel_df,settour_df, domestic_df, eztravel_df],ignore_index=True)
+con.to_csv('gettour.csv',encoding='ansi',errors='ignore')
 
 
 """
