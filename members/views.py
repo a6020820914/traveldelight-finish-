@@ -728,7 +728,6 @@ def fetch_weather_data():
     from selenium.webdriver.common.by import By
     from selenium.webdriver.support.ui import WebDriverWait
     from selenium.webdriver.support import expected_conditions as EC
-    import time
 
     weather_urls = []
     weather_data_list = []
@@ -738,7 +737,11 @@ def fetch_weather_data():
     options.add_argument('--no-sandbox')  # 確保無沙盒環境（Linux 系統常用）
     options.add_argument('--disable-dev-shm-usage')  # 避免資源限制錯誤
 
-    driver = webdriver.Chrome(options=options)
+    #heroku需要的設置
+    from selenium.webdriver.chrome.service import Service
+    service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
+
+    driver = webdriver.Chrome(service=service, options=options)
     url = 'https://www.cwa.gov.tw/V8/C/W/County/index.html'
     driver.get(url)
 
@@ -1064,8 +1067,11 @@ def fetch_train_schedule(start_station, end_station, ride_date):
     options.add_argument("--headless")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    #heroku需要的設置
+    from selenium.webdriver.chrome.service import Service
+    service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
 
-    driver = webdriver.Chrome(options=options)
+    driver = webdriver.Chrome(service=service, options=options)
 
     # 打開台鐵訂票網站
     driver.get("https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip112/gobytime")
@@ -1162,7 +1168,7 @@ def bookingTRA(id, startStation, endStation, trainNoList1, rideDate1):
     chrome_options.add_argument("--disable-notifications")
     chrome_options.add_argument("--no-sandbox")
     #佈署所需要的設定
-    import os
+
     from selenium.webdriver.chrome.service import Service
     service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
     driver = webdriver.Chrome(service=service, options=chrome_options)
