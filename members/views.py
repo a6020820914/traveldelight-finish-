@@ -1383,22 +1383,22 @@ def order_view(request, ticket_id):
         #     status = AsyncResult(task_id).status
         #     print(f"當前任務狀態：{status}2")          
         #     booking_info = result.get()
-        #     ticket.ticket_number=booking_info['ticket_number']#新增 訂票代碼 進資料庫
-        #     ticket.seat_number=booking_info['seat_number']#新增 座位號碼 進資料庫
-        #     ticket.order_sum=booking_info['order_sum']#新增 總金額 進資料庫
+            ticket.ticket_number=booking_info['ticket_number']#新增 訂票代碼 進資料庫
+            ticket.seat_number=booking_info['seat_number']#新增 座位號碼 進資料庫
+            ticket.order_sum=booking_info['order_sum']#新增 總金額 進資料庫
             
-        #     ticket.save
+            ticket.save
             #寄信
             time.sleep(15)
             send_mail(
                 subject='您的台鐵票訂單已確認',
                 message=f'感謝您的訂購！以下是您的台鐵票訂單資訊：\n\n'
-                        f'訂票代碼：{ticket.ticket_number}\n'
+                        f'訂票代碼：{booking_info['ticket_number']}\n'
                         # f'身分證字號：{ticket.passenger_ID}\n'
                         # f'旅客姓名：{ticket.passenger_name}\n'
                         f'搭乘車次：{ticket.train_number}\n'                        
                         # f'訂票代碼：{ticket.ticket_number}\n'
-                        # f'座位號碼：{ticket.seat_number}\n'
+                        f'座位號碼：{booking_info['seat_number']}\n'
                         # f'出發站：{ticket.from_station}\n'
                         # f'到達站：{ticket.to_station}\n'
                         f'出發日期：{ticket.departure_time}\n'
