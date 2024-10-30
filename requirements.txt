@@ -54,3 +54,4 @@ scikit-learn==1.4.2
 beautifulsoup4
 pandas
 python-dateutil
+line-bot-sdk
