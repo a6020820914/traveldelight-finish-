@@ -81,7 +81,10 @@ DATABASES = {
         'USER': 'gar561q31hy9t0rm', 
         'PASSWORD': 'cpd6v1qqmsewovvh', 
         'HOST': 'c584md9egjnm02sk.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', 
-        'PORT': '3306', 
+        'PORT': '3306',
+        'OPTIONS': {
+            'ssl': {'ca': '/path/to/ca-cert.pem'},
+        }, 
     } 
 } 
 
