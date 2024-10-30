@@ -83,7 +83,8 @@ DATABASES = {
         'HOST': 'c584md9egjnm02sk.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', 
         'PORT': '3306',
         'OPTIONS': {
-            'ssl': {'ca': '/path/to/ca-cert.pem'},
+            'ssl': False,
+            # 'ssl': {'ca': '/path/to/ca-cert.pem'},
         }, 
     } 
 } 
@@ -99,7 +100,7 @@ django_heroku.settings(locals())
 
 # 如果 DATABASE_URL 存在且不是 SQLite，则使用 dj_database_url 配置 PostgreSQL
 if 'DATABASE_URL' in os.environ:
-    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=True)
+    DATABASES['default'] = dj_database_url.config(conn_max_age=600, ssl_require=False)
 
 
 
