@@ -25,18 +25,14 @@ import time
 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-# chrome_options.add_argument("--headless=old") #無頭模式
+chrome_options.add_argument("--headless=old") #無頭模式
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument(f"user-agent={user_agent}")
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-# chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-notifications")
-# chrome_options.add_argument("--no-sandbox")
-chrome_options.add_argument("--headless")
-chrome_options.add_argument("--no-sandbox")
 chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-gpu")
-chrome_options.add_argument("--remote-debugging-port=9222")
+chrome_options.add_argument("--disable-notifications")
+chrome_options.add_argument("--no-sandbox")
+
 #佈署所需要的設定
 from selenium.webdriver.chrome.service import Service
 service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
@@ -135,7 +131,6 @@ def eztravel(Arrive, df, driver):
     num=int(driver.find_element(By.CSS_SELECTOR, 'div.SearchResult_orange__4td0o').text)
 
     for page in range(1,math.ceil(num/15)+1):
-        print('report:',Arrive,'-',page)
         #每一頁共15個行程一起抓
         nextlink='https://trip.eztravel.com.tw/domestic/keywords?depart=&viewList='+ArriveID[Arrive]+'&avaliableOnly=true&depDateFrom='+GoDateStart1+'&depDateTo='+GoDateEnd1+'&orderBy=1&page='+str(page)
         driver.get(nextlink)
@@ -246,7 +241,6 @@ def eztravel(Arrive, df, driver):
                     TourSpecialList.append(driver.find_element(By.CSS_SELECTOR, 'div.TourFeature_content__zz2Gu').text)
                 except:
                     TourSpecialList.append("")
-
                 GoDate=[]
                 go=True
                 n=0
@@ -271,7 +265,6 @@ def eztravel(Arrive, df, driver):
                         except:
                             go=False    
                 GoDatelist.append(GoDate)
-
                 try:
                     WebDriverWait(driver,20,0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'div.DescDetail_travelDays__0tHN9')))
                     Days=[i for i in range(1,int(driver.find_element(By.CSS_SELECTOR, 'div.DescDetail_travelDays__0tHN9').text.split(" ")[0])+1)]
@@ -292,7 +285,6 @@ def eztravel(Arrive, df, driver):
                 except:
                     Attractions=[]
                 Attractionlist.append(Attractions)
-
                 Breakfasts=[]
                 Lunchs=[]
                 Dinners=[]
@@ -308,7 +300,6 @@ def eztravel(Arrive, df, driver):
                 Breakfastlist.append(Breakfasts)
                 Lunchlist.append(Lunchs)
                 Dinnerlist.append(Dinners)
-
                 try:
                     WebDriverWait(driver,20,0.5).until(EC.presence_of_element_located((By.CSS_SELECTOR, 'article.ScheduleDay_scheduleDay__odBC9 div.HotelAndMeals_hotelAndMeals__Q6BPP div.HotelAndMeals_htl__AIyx9')))
                     Hotels=[i.text for i in driver.find_elements(By.CSS_SELECTOR, 'article.ScheduleDay_scheduleDay__odBC9 div.HotelAndMeals_hotelAndMeals__Q6BPP div.HotelAndMeals_htl__AIyx9')]
@@ -350,9 +341,9 @@ class Worker(threading.Thread):
             if not result_data.empty:
                 self.lock.acquire()  # 鎖住寫檔操作
                 try:
-                    df=pd.read_csv('eztravel.csv', encoding='utf-8',errors='ignore', index_col=0)
+                    df=pd.read_csv('eztravel.csv', encoding='utf-8', index_col=0)
                     con = pd.concat([df,result_data],ignore_index=True)
-                    con.to_csv('eztravel.csv', encoding='utf-8')
+                    con.to_csv('eztravel.csv', encoding='utf-8',errors='ignore')
                 finally:
                     self.lock.release()  # 釋放鎖
                     
@@ -373,10 +364,10 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 2
+num_threads = 4
 workers = []
 
-df=pd.read_csv('eztravel.csv', encoding='utf-8',errors='ignore', index_col=0)
+df=pd.read_csv('eztravel.csv', encoding='utf-8', index_col=0)
 for _ in range(num_threads):
     worker = Worker(my_queue, lock, df)
     worker.start()
@@ -390,17 +381,17 @@ for worker in workers:
 for worker in workers:
     worker.quit_driver()
 
-df1=pd.read_csv('eztravel.csv', encoding='utf-8',errors='ignore', index_col=0)
+df1=pd.read_csv('eztravel.csv', encoding='utf-8', index_col=0)
 for idx, ev, rv, gv in zip(indexes, earlierGoDatevalues, renew_datevalues, GoDatevalues):
     df1.at[idx, "earlierGoDate"]=ev
     df1.at[idx, "renew_date"]=rv
     df1.at[idx, "GoDate"]=gv
-df1.to_csv('eztravel.csv', encoding='utf-8')
+df1.to_csv('eztravel.csv', encoding='utf-8',errors='ignore')
 
 if len(AttractionSet)>0:       
-    df2=pd.read_csv('attraction.csv', encoding='utf-8',errors='ignore', index_col=0)
+    df2=pd.read_csv('attraction.csv', encoding='utf-8', index_col=0)
     df2_Attract=set(df2['Attraction'])
     Attract=df2_Attract|AttractionSet
     Attractdata = pd.DataFrame({"Attraction":list(Attract)})
-    Attractdata.to_csv('attraction.csv', encoding='utf-8')
+    Attractdata.to_csv('attraction.csv', encoding='utf-8',errors='ignore')
   
