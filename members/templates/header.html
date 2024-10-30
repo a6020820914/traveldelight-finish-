@@ -143,8 +143,15 @@
                 <li class="nav-item">
                   <a class="nav-link" href="/about">關於我們</a>
                 </li>
-                <li class="nav-item">
-                  <a class="nav-link" href="{% url 'introduce' %}">景點介紹</a>
+                <!-- 景點介紹下拉菜单 -->
+                <li class="nav-item dropdown">
+                  <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                      景點介紹
+                  </a>
+                  <ul class="dropdown-menu" aria-labelledby="navbarDropdown">
+                      <li><a class="dropdown-item" href="{% url 'travel_more' %}">全台縣市</a></li>
+                      <li><a class="dropdown-item" href="{% url 'introduce' %}">全台景點</a></li>
+                  </ul>
                 </li>
                 <li class="nav-item">
                   <a class="nav-link" href="{% url 'tours' %}">旅遊行程</a>

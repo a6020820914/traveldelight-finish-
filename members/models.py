@@ -310,6 +310,7 @@ class TicketOrder(models.Model):
     passenger_name = models.CharField(max_length=100)#旅客姓名(會許可以foriegnKey會員資料)
     passenger_ID = models.CharField(max_length=30,default=False)#旅客身分證字號
     go_time = models.CharField(max_length=30,default=False)#出發時間
+    arrive_time = models.CharField(max_length=30,default=False)#出發時間
     order_time = models.DateTimeField(auto_now_add=True)
     ticket_number = models.CharField(max_length=30,null=True)#訂票代碼
     seat_number = models.CharField(max_length=30,null=True)#座位號碼

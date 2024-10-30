@@ -126,6 +126,7 @@
                                 <th>到達站</th>
                                 <th>出發時間</th>
                                 <th>抵達時間</th>
+                                <th>價位</th>
                                 <th>訂票</th>
                             </tr>
                         </thead>
@@ -137,9 +138,10 @@
                                 <td>{{ schedule.to_station }}</td>
                                 <td>{{ ride_date }} {{ schedule.departure_time }}</td>
                                 <td>{{ ride_date }} {{ schedule.arrive_time }}</td>
+                                <td>${{ schedule.price }}</td>
                                 <td>
                                     <a href="{% url 'order_ticket' %}" 
-                                       data-schedule="{{ schedule.train_number }},{{ start_station }},{{ end_station }},{{ ride_date }},{{ schedule.departure_time }}" 
+                                       data-schedule="{{ schedule.train_number }},{{ start_station }},{{ end_station }},{{ ride_date }},{{ schedule.departure_time }},{{ schedule.arrive_time }},{{ schedule.price }}" 
                                        class="btn btn-success">訂票</a>
                                 </td>
                             </tr>

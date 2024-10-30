@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 {% load static %}
-
+{% load custom_filters %}
 {% block content %}
 <!DOCTYPE html>
 <html lang="zh-Hant">
@@ -26,17 +26,18 @@
 </head>
 <body class="bg-dark"> <!-- 背景顏色為深色 -->
     <div class="container mt-5">
-        <h2 class="text-center">訂票成功!</h2>
-        <h2 class="text-center">謝謝您的訂票!</h2>
+        <h2 class="text-center text-light">訂票成功!</h2>
+        <h2 class="text-center text-light">謝謝您的訂票!</h2>
 
         <div class="result-container">
             <p>訂票代碼: <strong>{{ ticket_number }}</strong></p>
             <p>搭乘列車: <strong>{{ train_number }}</strong></p>
-            <p>座位號碼: <strong>{{ seat_number }}</strong></p>
+            {% if train_number|traintype %}
+                <p>座位號碼: <strong>{{ seat_number }}</strong></p>
+            {% endif %}
             <p>搭乘時間: <strong>{{ trip_time }}</strong></p>
             <p class="total">總金額: <strong>{{ order_sum }}元</strong></p>
         </div>
-
         <a href="{% url 'index' %}" class="btn btn-primary btn-block mt-4">返回查詢頁面</a>
     </div>
 

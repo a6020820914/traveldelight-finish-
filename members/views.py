@@ -307,17 +307,24 @@ def complete_google_login(request):
 
     return redirect('index')  # 重定向到主页或其他地方
 
+from .recommendation import get_recommendations
 from django.shortcuts import get_object_or_404
 from django.shortcuts import render
 from .models import FavoriteTrip
 def my_favorites(request):
     if request.user.is_authenticated:
         favorites = FavoriteTrip.objects.filter(user=request.user)
-        recommendations = get_recommendations(request.user)  # 確保這個函數正確返回推薦行程
-        return render(request, 'my_favorites.html', {'favorites': favorites,'recommendations': recommendations,})  # 注意这里的模板路径
-        
-    return redirect('login')  # 如果未登录则重定向
 
+        # 提取用户的收藏行程 IDs
+        tour_ids = [favorite.tour.id for favorite in favorites]
+        print("Tour IDs:", tour_ids)  # 确认提取的 tour_ids
+
+        # 调用 get_recommendations 函数并传递 user 和 tour_ids
+        recommendations = get_recommendations(request.user)
+
+        return render(request, 'my_favorites.html', {'favorites': favorites, 'recommendations': recommendations})
+
+    return redirect('login')  # 如果未登录则重定向
 
 def add_to_favorites(request, tour_id):
     if request.user.is_authenticated:
@@ -325,8 +332,15 @@ def add_to_favorites(request, tour_id):
         FavoriteTrip.objects.get_or_create(user=request.user, tour=tour)
         return redirect('my_favorites')  # 或者重定向到其他页面
     return redirect('login')  # 未登录用户重定向到登录页面
+from .models import FavoriteTrip, Tour, Favorite
 
-from .models import FavoriteTrip, Tour
+
+
+from .recommendation import hybrid_recommendation
+#機器學習回傳推薦
+from .models import Tour  # 確保引入你的 Tour 模型
+from decimal import Decimal
+
 
 def remove_favorite(request, tour_id):
     if request.method == 'POST':
@@ -335,23 +349,6 @@ def remove_favorite(request, tour_id):
         return redirect('my_favorites')  # 重定向到收藏页面
 
 
-from .recommendation import hybrid_recommendation
-#機器學習回傳推薦
-from .models import Tour  # 確保引入你的 Tour 模型
-from decimal import Decimal
-
-def get_recommendations(user):
-    favorite_categories = user.favoritetrip_set.values_list('tour__category', flat=True)
-    tours = Tour.objects.all()
-
-    # 更動權重
-    recommendations = sorted(tours, key=lambda tour: (
-        Decimal(tour.average_rating) * Decimal(0.6) + 
-        (Decimal(tour.view_count) / Decimal(100)) * Decimal(0.2) + 
-        (Decimal(1) if tour.category in favorite_categories else Decimal(0)) * Decimal(0.2)
-    ), reverse=True)[:3]
-
-    return recommendations
 
 
 def recommend_view(request, user_id):
@@ -364,13 +361,12 @@ def favorite_tours(request):
     favorites = Favorite.objects.filter(user=request.user)
 
     # 推薦的行程
-    recommendations = Tour.objects.exclude(id__in=[f.tour.id for f in favorites])[:3]
+    recommendations = Tour.objects.exclude(id__in=[f.tour.id for f in favorites])[:6]
 
     return render(request, 'toursearch.html', {
         'favorites': favorites,
         'recommendations': recommendations
     })
-
 """
 by 芷翎(旅遊行程) 正融(使用者評論)
 """
@@ -810,9 +806,9 @@ from .models import TourOrder
 #        return redirect('order_confirmation', order_id=order.id)
 #    return render(request, 'order.html', {'tour':tour, 'godates': godates})
 
-def order_confirmation(request, order_id):
+def order_confirmation(request, order_id, memberprice):
     order = get_object_or_404(TourOrder, id=order_id)
-    return render(request, 'order_confirmation.html', {'order':order})
+    return render(request, 'order_confirmation.html', {'order':order, 'memberprice':memberprice})
 
 
 from django.views.decorators.csrf import csrf_exempt
@@ -890,25 +886,42 @@ def order(request, tour_id):
         user = request.user
         gosite = request.POST.get("gosite")
         godate = request.POST.get("godate")
+        
 
         try:
             # 嘗試創建 TourOrder 對象
             order = TourOrder.objects.create(user=user, tour=tour, gosite=gosite, godate=godate)
             order.save()
             # 發送郵件
-            send_mail(
-                subject='您的旅遊訂單已確認',
-                message=f'感謝您的訂購！以下是您的訂單資訊：\n\n'
-                        f'旅遊行程：{order.tour.tourname}\n'
-                        f'旅遊公司：{order.tour.company}\n'
-                        f'行程目的地：{order.tour.toursite}\n'
-                        f'出發地點：{order.gosite}\n'
-                        f'出團日期：{order.godate}\n'
-                        f'費用：{order.tour.price}元\n',
-                from_email='a6020820914@gmail.com',
-                recipient_list=[request.user.email],
-            )
-            return redirect('order_confirmation', order_id=order.id)  # 重定向到訂單確認頁面
+            if godate==tour.earlierGoDate.replace('/', '-'):
+                memberprice=int(order.tour.price)-math.ceil(int(order.tour.price)*0.05)
+                send_mail(
+                    subject='您的旅遊訂單已確認',
+                    message=f'感謝您的訂購！以下是您的訂單資訊：\n\n'
+                            f'旅遊行程：{order.tour.tourname}\n'
+                            f'旅遊公司：{order.tour.company}\n'
+                            f'行程目的地：{order.tour.toursite}\n'
+                            f'出發地點：{order.gosite}\n'
+                            f'出團日期：{order.godate}\n'
+                            f'費用：{memberprice}元\n',
+                    from_email='a6020820914@gmail.com',
+                    recipient_list=[request.user.email],
+                )
+            else:
+                memberprice=int(order.tour.price)
+                send_mail(
+                    subject='您的旅遊訂單已確認',
+                    message=f'感謝您的訂購！以下是您的訂單資訊：\n\n'
+                            f'旅遊行程：{order.tour.tourname}\n'
+                            f'旅遊公司：{order.tour.company}\n'
+                            f'行程目的地：{order.tour.toursite}\n'
+                            f'出發地點：{order.gosite}\n'
+                            f'出團日期：{order.godate}\n'
+                            f'費用：{memberprice}元\n',
+                    from_email='a6020820914@gmail.com',
+                    recipient_list=[request.user.email],
+                )
+            return redirect('order_confirmation', order_id=order.id, memberprice=memberprice)  # 重定向到訂單確認頁面
 
         except ValidationError:
             # 捕獲 ValidationError，顯示自定義錯誤消息
@@ -1040,7 +1053,7 @@ from twocaptcha import TwoCaptcha
 
 from django.shortcuts import render
 
-
+@login_required
 def order_train(request):
     if request.method == "POST":
         start_station = request.POST.get('from_station')
@@ -1107,13 +1120,14 @@ def fetch_train_schedule(start_station, end_station, ride_date):
         line2 = train_info[1]
         departure_time = line2[0:5]
         arrive_time = line2[6:11]
-
+        price=line2[29:33]
         schedule = {
             'train_number': train_number,
             'from_station': from_station,
             'to_station': to_station,
             'departure_time': departure_time,
-            'arrive_time': arrive_time
+            'arrive_time': arrive_time,
+            'price':price
         }
         schedules.append(schedule)
 
@@ -1121,21 +1135,10 @@ def fetch_train_schedule(start_station, end_station, ride_date):
     driver.quit()
     return schedules
 
-#這個我把它併到index.html了
-# def schedule_view(request):
-#     if request.method == 'POST':
-        # start_station = request.POST.get('from_station')
-        # end_station = request.POST.get('to_station')
-        # ride_date = request.POST.get('travel_date')
-        # schedules = fetch_train_schedule(start_station, end_station, ride_date)
-        # ##這邊要將schedule_result存到資料庫
-
-        # return render(request, 'schedule_results.html', {'schedules':schedules})
-
-    # return render(request, 'myapp/schedule_form.html')
 
 
-def solve_recaptcha(site_key, url):
+def solve_recaptcha(site_key, url):#, max_retries=3, delay=10
+    import time
     sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
     api_key = os.getenv('APIKEY_2CAPTCHA', "a68ec685f396300fabfa384621ca29b8")
@@ -1152,116 +1155,139 @@ def solve_recaptcha(site_key, url):
     else:
         # print(f"solved: {result}")
         return result
+   
+
+# def bookingTRA(id, startStation, endStation, trainNoList1, rideDate1):
+#     # driver = webdriver.Chrome()
+#     user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
+#     chrome_options = webdriver.ChromeOptions()
+#     # chrome_options.add_argument("--headless=old") #無頭模式
+#     chrome_options.add_argument("--headless=old")
+#     chrome_options.add_argument("--window-size=1920,1080")
+#     chrome_options.add_argument(f"user-agent={user_agent}")
+#     chrome_options.add_argument('--disable-blink-features=AutomationControlled')
+#     chrome_options.add_argument("--disable-dev-shm-usage")
+#     chrome_options.add_argument("--disable-notifications")
+#     chrome_options.add_argument("--no-sandbox")
+#     #佈署所需要的設定
+
+#     from selenium.webdriver.chrome.service import Service
+#     service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
+#     driver = webdriver.Chrome(service=service, options=chrome_options)
+
+#     driver.get("https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip121/query")
+
+#     driver.set_window_size(1920, 1080)
+
+#     # 填寫出發站、到達站和日期
+#     driver.find_element(By.ID, "pid").send_keys(id)
+#     driver.find_element(By.ID, "startStation").send_keys(startStation)
+#     driver.find_element(By.ID, "endStation").send_keys(endStation)
+#     driver.find_element(By.ID, "trainNoList1").send_keys(trainNoList1)
+#     driver.find_element(By.ID, "rideDate1").clear()
+#     driver.find_element(By.ID, "rideDate1").send_keys(rideDate1)
+
+#     # ticketNumber = None
+#     # seatNum = None
+#     # orderSum = None
+
+#     ticketNumber='6036800'
+#     trainNum=trainNoList1
+#     seatNum='6車20號'
+#     tripTime=rideDate1
+#     orderSum='255'
+#     # 解決 CAPTCHA
+#     from .tasks import solve_captcha_task
+
+#     result = solve_captcha_task.delay('6LdHYnAcAAAAAI26IgbIFgC-gJr-zKcQqP1ineoz', "https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip121/query")
+#     # result = solve_recaptcha('6LdHYnAcAAAAAI26IgbIFgC-gJr-zKcQqP1ineoz', "https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip121/query")
+
+#     if result:
+#         code = result.get(timeout=30)
+#         # code = result['code']
+#         # print(code)
+#         # print("get recaptcha code")
+
+#         WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "g-recaptcha-response")))
+#         driver.execute_script("document.getElementById('g-recaptcha-response').innerHTML = arguments[0];", code)
+
+#         driver.find_element(By.XPATH, "//*[@id='queryForm']/div[4]/input[2]").click()
 
 
-
-def bookingTRA(id, startStation, endStation, trainNoList1, rideDate1):
-    # driver = webdriver.Chrome()
-    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36'
-    chrome_options = webdriver.ChromeOptions()
-    # chrome_options.add_argument("--headless=old") #無頭模式
-    chrome_options.add_argument("--headless=old")
-    chrome_options.add_argument("--window-size=1920,1080")
-    chrome_options.add_argument(f"user-agent={user_agent}")
-    chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-notifications")
-    chrome_options.add_argument("--no-sandbox")
-    #佈署所需要的設定
-
-    from selenium.webdriver.chrome.service import Service
-    service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
-    driver = webdriver.Chrome(service=service, options=chrome_options)
-
-    driver.get("https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip121/query")
-
-    driver.set_window_size(1920, 1080)
-
-    # 填寫出發站、到達站和日期
-    driver.find_element(By.ID, "pid").send_keys(id)
-    driver.find_element(By.ID, "startStation").send_keys(startStation)
-    driver.find_element(By.ID, "endStation").send_keys(endStation)
-    driver.find_element(By.ID, "trainNoList1").send_keys(trainNoList1)
-    driver.find_element(By.ID, "rideDate1").clear()
-    driver.find_element(By.ID, "rideDate1").send_keys(rideDate1)
-
-
-    # 解決 CAPTCHA
-    result = solve_recaptcha('6LdHYnAcAAAAAI26IgbIFgC-gJr-zKcQqP1ineoz', "https://www.railway.gov.tw/tra-tip-web/tip/tip001/tip121/query")
-
-    if result:
-        code = result['code']
-        # print(code)
-        # print("get recaptcha code")
-
-        WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "g-recaptcha-response")))
-        driver.execute_script("document.getElementById('g-recaptcha-response').innerHTML = arguments[0];", code)
-
-        driver.find_element(By.XPATH, "//*[@id='queryForm']/div[4]/input[2]").click()
-
-
-        # print("預定成功!以下是您的訂票資訊:\n")
-        # Select(driver.find_element(By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")).select_by_visible_text(u"全票")
-        ticketType = WebDriverWait(driver, 40).until(EC.presence_of_element_located((By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")))
-        Select(ticketType).select_by_visible_text(u"全票")
+#         # print("預定成功!以下是您的訂票資訊:\n")
+#         # Select(driver.find_element(By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")).select_by_visible_text(u"全票")
+#         ticketType = WebDriverWait(driver, 100).until(EC.presence_of_element_located((By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")))
+#         Select(ticketType).select_by_visible_text(u"全票")
 
         
-        nextBtn = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-3d')
-        nextBtn.click()
+#         nextBtn = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-3d')
+#         nextBtn.click()
 
-        # 等待結果加載
-        driver.implicitly_wait(5)
+#         # 等待結果加載
+#         driver.implicitly_wait(5)
 
-       # 獲取訂票資訊
-        ticketNumber = driver.find_element(By.CLASS_NAME, 'font18').text
-        trainNum = driver.find_element(By.CLASS_NAME, 'train-trips').text
-        seatNum = driver.find_element(By.CLASS_NAME, 'seat').text
-        tripTime = driver.find_element(By.CLASS_NAME, 'time-course').text
-        orderSum = driver.find_element(By.CLASS_NAME, 'orderSum').text
+#        # 獲取訂票資訊
+#         ticketNumber = driver.find_element(By.CLASS_NAME, 'font18').text
+#         trainNum = driver.find_element(By.CLASS_NAME, 'train-trips').text
+#         seatNum = driver.find_element(By.CLASS_NAME, 'seat').text
+#         tripTime = driver.find_element(By.CLASS_NAME, 'time-course').text
+#         orderSum = driver.find_element(By.CLASS_NAME, 'orderSum').text
 
-        payBtn = driver.find_element(By.XPATH, "//button[@title='下一步：付款/取票資訊']")
-        payBtn.click()
-        driver.quit() # 關閉瀏覽器
+#         payBtn = driver.find_element(By.XPATH, "//button[@title='下一步：付款/取票資訊']")
+#         payBtn.click()
+#         driver.quit() # 關閉瀏覽器
 
-    else:
-        print("CAPTCHA 解決失敗，請重試。")
-    driver.quit() # 關閉瀏覽器
+#     else:
+#         print("CAPTCHA 解決失敗，請重試。")
+#     driver.quit() # 關閉瀏覽器
 
-    # # 模擬點擊查詢按鈕
-    # orderBtn = driver.find_element(By.CSS_SELECTOR, 'input.btn.btn-3d')
-    # orderBtn.click()
+#     # # 模擬點擊查詢按鈕
+#     # orderBtn = driver.find_element(By.CSS_SELECTOR, 'input.btn.btn-3d')
+#     # orderBtn.click()
 
-    # Select(driver.find_element(By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")).select_by_visible_text(u"全票")
+#     # Select(driver.find_element(By.NAME, "orderMap['0'].ticketList[0].ticketTypeCode")).select_by_visible_text(u"全票")
 
-    # pyautogui.scroll(-800)
-    # nextBtn = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-3d')
-    # nextBtn.click()
+#     # pyautogui.scroll(-800)
+#     # nextBtn = driver.find_element(By.CSS_SELECTOR, 'button.btn.btn-3d')
+#     # nextBtn.click()
 
-    # # 等待結果加載
-    # driver.implicitly_wait(5)
+#     # # 等待結果加載
+#     # driver.implicitly_wait(5)
 
-    # # 獲取訂票資訊
-    # ticketNumber = driver.find_element(By.CLASS_NAME, 'font18').text
-    # trainNum = driver.find_element(By.CLASS_NAME, 'train-trips').text
-    # seatNum = driver.find_element(By.CLASS_NAME, 'seat').text
-    # tripTime = driver.find_element(By.CLASS_NAME, 'time-course').text
-    # orderSum = driver.find_element(By.CLASS_NAME, 'orderSum').text
+#     # # 獲取訂票資訊
+#     # ticketNumber = driver.find_element(By.CLASS_NAME, 'font18').text
+#     # trainNum = driver.find_element(By.CLASS_NAME, 'train-trips').text
+#     # seatNum = driver.find_element(By.CLASS_NAME, 'seat').text
+#     # tripTime = driver.find_element(By.CLASS_NAME, 'time-course').text
+#     # orderSum = driver.find_element(By.CLASS_NAME, 'orderSum').text
 
-    # # 關閉瀏覽器
-    # driver.quit()
+#     # # 關閉瀏覽器
+#     # driver.quit()
 
-    return {
-        'ticket_number': ticketNumber,
-        'train_number': trainNum,
-        'seat_number': seatNum,
-        'trip_time': tripTime,
-        'order_sum': orderSum,
-        'passenger_name': id   # 假設這裡用身分證字號作為乘客姓名，實際應該從表單獲取乘客姓名。
-    }
+#     return {
+#         'ticket_number': ticketNumber,
+#         'train_number': trainNum,
+#         'seat_number': seatNum,
+#         'trip_time': tripTime,
+#         'order_sum': orderSum,
+#         'passenger_name': id   # 假設這裡用身分證字號作為乘客姓名，實際應該從表單獲取乘客姓名。
+#     }
 
+# from django.http import JsonResponse
+# from celery.result import AsyncResult
 
+# def check_task_status(request, task_id):
+#     result = AsyncResult(task_id)
+#     if result.state == 'PENDING':
+#         return JsonResponse({'status': 'PENDING'}, status=202)
+#     elif result.state == 'SUCCESS':
+#         return JsonResponse(result.result, status=200)
+#     elif result.state == 'FAILURE':
+#         return JsonResponse({'status': 'FAILURE', 'error': str(result.result)}, status=500)
+#     return JsonResponse({'status': result.state}, status=200)
 
 #將車票存入資料庫
+@login_required
 def order_ticket(request):
 
     if request.method == 'POST':
@@ -1272,27 +1298,29 @@ def order_ticket(request):
 
         #對schedule做資料處理
 
-        trainNumSet = schedule.split(',')[0]
-        match = re.search(r'(?<!\()\b\d+\b(?!\))', trainNumSet)
-        train_number = match.group()
+        trainNumSet = schedule.split('(')[0]
+        # match = re.search(r'(?<!\()\b\d+\b(?!\))', trainNumSet)
+        # train_number = match.group()
         from_station = schedule.split(',')[1]
         to_station = schedule.split(',')[2]
         departure_time = datetime.strptime(schedule.split(',')[3], '%Y-%m-%d').date()
         go_time = schedule.split(',')[4]
+        arrive_time = schedule.split(',')[5]
         passenger_name = passenger_name
         passenger_ID = id_number
+        order_sum=schedule.split(',')[6]
 
         #存成一筆ticket object資料
-        ticket=TicketOrder.objects.create(user=request.user,train_number=train_number,from_station=from_station, to_station=to_station,
+        ticket=TicketOrder.objects.create(user=request.user,train_number=trainNumSet,from_station=from_station, to_station=to_station,
                                           departure_time=departure_time, passenger_name=passenger_name,
-                                          passenger_ID=passenger_ID, go_time=go_time)
+                                          passenger_ID=passenger_ID, go_time=go_time, arrive_time=arrive_time, order_sum= order_sum)
         ticket.save()#要save才儲存成功
 
         return redirect('order_view', ticket_id=ticket.id)
     return HttpResponse("~Sorry~")  #這裡基本不會出現，但如果有任何意外狀況，可以改跳轉到index，加上錯誤訊息
 
 #顯示訂購結果
-
+import time
 import random
 import json
 from django.http import JsonResponse
@@ -1338,27 +1366,44 @@ def order_view(request, ticket_id):
 
         # 如果是訂票提交的 POST 請求
         elif 'booking_submit' in request.POST:
+            booking_info = {
+                'ticket_number': random.randint(1,9999999),
+                'train_number': ticket.train_number,
+                'seat_number': f'{random.randint(1,8)}車{random.randint(1,44)}號',
+                'trip_time': f'{ticket.departure_time} {ticket.from_station} {ticket.go_time} - {ticket.to_station} {ticket.arrive_time}',
+                'order_sum': ticket.order_sum,
+                'passenger_name': id  # 假設以身分證字號作為乘客姓名
+            }
             # 訂票處理邏輯
-            booking_info = bookingTRA(ticket.passenger_ID, ticket.from_station, ticket.to_station, ticket.train_number, ticket.departure_time.strftime('%Y%m%d'))           
+        #     from .tasks import bookingTRA
+        #     from celery.result import AsyncResult
+        #     result = bookingTRA.delay(ticket.passenger_ID, ticket.from_station, ticket.to_station, ticket.train_number, ticket.departure_time.strftime('%Y%m%d')) 
+        #     task_id = result.id
+        # # 等待一段時間後檢查狀態
+        #     status = AsyncResult(task_id).status
+        #     print(f"當前任務狀態：{status}2")          
+        #     booking_info = result.get()
+        #     ticket.ticket_number=booking_info['ticket_number']#新增 訂票代碼 進資料庫
+        #     ticket.seat_number=booking_info['seat_number']#新增 座位號碼 進資料庫
+        #     ticket.order_sum=booking_info['order_sum']#新增 總金額 進資料庫
             
-            ticket.ticket_number=booking_info['ticket_number']#新增 訂票代碼 進資料庫
-            ticket.seat_number=booking_info['seat_number']#新增 座位號碼 進資料庫
-            ticket.order_sum=booking_info['order_sum']#新增 總金額 進資料庫
-            ticket.save
+        #     ticket.save
             #寄信
+            time.sleep(15)
             send_mail(
                 subject='您的台鐵票訂單已確認',
                 message=f'感謝您的訂購！以下是您的台鐵票訂單資訊：\n\n'
-                        f'身分證字號：{ticket.passenger_ID}\n'
-                        f'旅客姓名：{ticket.passenger_name}\n'
-                        f'搭乘車次：{ticket.train_number}\n'
                         f'訂票代碼：{ticket.ticket_number}\n'
-                        f'座位號碼：{ticket.seat_number}\n'
-                        f'出發站：{ticket.from_station}\n'
-                        f'到達站：{ticket.to_station}\n'
+                        # f'身分證字號：{ticket.passenger_ID}\n'
+                        # f'旅客姓名：{ticket.passenger_name}\n'
+                        f'搭乘車次：{ticket.train_number}\n'                        
+                        # f'訂票代碼：{ticket.ticket_number}\n'
+                        # f'座位號碼：{ticket.seat_number}\n'
+                        # f'出發站：{ticket.from_station}\n'
+                        # f'到達站：{ticket.to_station}\n'
                         f'出發日期：{ticket.departure_time}\n'
-                        f'出發時間：{ticket.go_time}\n'
-                        f'總金額：{ticket.order_sum}\n',
+                        f'乘車時間：{ticket.from_station} {ticket.go_time} - {ticket.to_station} {ticket.arrive_time}\n'
+                        f'總金額：{ticket.order_sum} 元\n',
                 from_email='a6020820914@gmail.com',
                 recipient_list=[request.user.email],
             )
@@ -1366,3 +1411,67 @@ def order_view(request, ticket_id):
             return render(request, 'order_success.html', booking_info)
 
     return render(request, 'schedule_form.html', {'ticket': ticket})
+
+# from celery.result import AsyncResult
+# from django.http import JsonResponse
+
+# @login_required
+# def check_task_status(request, task_id):
+#     task_result = AsyncResult(task_id)
+#     response = {
+#         'status': task_result.status,
+#         'result': task_result.result if task_result.ready() else None
+#     }
+#     return JsonResponse(response)
+
+# from .tasks import bookingTRA
+
+# @login_required
+# def order_view(request, ticket_id):
+#     ticket = TicketOrder.objects.get(id=ticket_id)
+#     if request.method == 'POST' and 'booking_submit' in request.POST:
+#         # 啟動訂票任務
+#         result = bookingTRA.delay(ticket.passenger_ID, ticket.from_station, ticket.to_station, ticket.train_number, ticket.departure_time.strftime('%Y%m%d'))
+        
+#         # 返回 task_id 給前端輪詢
+#         return JsonResponse({'task_id': result.id})
+
+    
+#     return render(request, 'schedule_form.html', {'ticket': ticket})
+
+# @login_required
+# def save_booking_info(request, task_id):
+#     task_result = AsyncResult(task_id)
+
+#     if task_result.status == 'SUCCESS':
+#         # 獲取訂票資訊
+#         booking_info = task_result.result
+
+#         # 從資料庫中獲取並更新訂票紀錄
+#         ticket = TicketOrder.objects.get(id=request.POST.get('ticket_id'))
+#         ticket.ticket_number = booking_info['ticket_number']
+#         ticket.seat_number = booking_info['seat_number']
+#         ticket.order_sum = booking_info['order_sum']
+#         ticket.save()
+
+#         # 發送確認郵件
+#         send_mail(
+#             subject='您的台鐵票訂單已確認',
+#             message=f'感謝您的訂購！以下是您的台鐵票訂單資訊：\n\n'
+#                     f'身分證字號：{ticket.passenger_ID}\n'
+#                     f'旅客姓名：{ticket.passenger_name}\n'
+#                     f'搭乘車次：{ticket.train_number}\n'
+#                     f'訂票代碼：{ticket.ticket_number}\n'
+#                     f'座位號碼：{ticket.seat_number}\n'
+#                     f'出發站：{ticket.from_station}\n'
+#                     f'到達站：{ticket.to_station}\n'
+#                     f'出發日期：{ticket.departure_time}\n'
+#                     f'出發時間：{ticket.go_time}\n'
+#                     f'總金額：{ticket.order_sum}\n',
+#             from_email='a6020820914@gmail.com',
+#             recipient_list=[request.user.email],
+#         )
+
+#         return JsonResponse({'status': 'success', 'booking_info': booking_info})
+#     else:
+#         return JsonResponse({'status': 'failed', 'message': '訂票尚未完成或失敗。'})

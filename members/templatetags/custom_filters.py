@@ -53,3 +53,11 @@ def rating2(valu):
 def rating1(valu):
     rating = Rating.objects.filter(Q(tour=valu)&Q(value=1)).count()
     return rating
+
+@register.filter(name='traintype')
+def traintype(value):
+    value=value.split(" ")[0]
+    if "自強" in value:
+        return True
+    else:
+        return False

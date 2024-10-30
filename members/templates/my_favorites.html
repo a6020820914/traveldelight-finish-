@@ -13,11 +13,20 @@
             flex-direction: column;
         }
         .card-img-top {
-            height: 200px; /* 圖片高度固定 */
+            width: 100%; /* 統一圖片寬度 */
+            height: 200px; /* 統一圖片高度 */
             object-fit: cover; /* 保持圖片比例，裁剪適應區域 */
         }
         .card-body {
             flex-grow: 1; /* 填滿卡片內容的可用空間 */
+        }
+        .card-text {
+            max-height: 4em; /* 限制文字區塊的最大高度 */
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 5; /* 限制顯示行數 (2.5倍行數，視需求可微調) */
+            -webkit-box-orient: vertical;
         }
         body {
             background-color: #f0f0f0; /* 背景顏色 */
@@ -65,7 +74,6 @@
 
     {% block content %}
     <div class="container mt-5">
-       
         <div class="row">
             <!-- 收藏行程展示區 -->
             {% if favorites %}
@@ -76,7 +84,6 @@
                             <div class="card-body">
                                 <h5 class="card-title">{{ favorite.tour.tourname }}</h5>
                                 <a href="{% url 'tourDetail' favorite.tour.id %}" class="btn btn-primary">查看行程</a>
-                                <!-- 刪除收藏的表單 -->
                                 <form action="{% url 'remove_favorite' favorite.tour.id %}" method="post" style="display: inline;">
                                     {% csrf_token %}
                                     <button type="submit" class="btn btn-danger">刪除</button>
@@ -107,7 +114,9 @@
                             <img src="{{ tour.tourimage }}" class="card-img-top" alt="{{ tour.tourname }}">
                             <div class="card-body">
                                 <h5 class="card-title">{{ tour.tourname }}</h5>
-                                <p class="card-text">{{ tour.tourSpecial }}</p>
+
+                                <p class="card-text">{{ tour.tourSpecial|truncatechars:20 }}</p>
+
                                 <a href="{% url 'tourDetail' tour.id %}" class="btn btn-primary">查看行程</a>
                             </div>
                         </div>
@@ -118,8 +127,9 @@
             {% endif %}
         </div>
     </div>
+
     {% endblock %}
-    
+
     <!-- 引入 Bootstrap JS -->
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.3/dist/umd/popper.min.js"></script>

@@ -65,11 +65,12 @@ urlpatterns = [
 
     # 購物車部分
     path("order/<int:tour_id>", views.order, name='order'),
-    path('order_confirmation/<int:order_id>', views.order_confirmation, name='order_confirmation'),
+    path('order_confirmation/<int:order_id>/<int:memberprice>', views.order_confirmation, name='order_confirmation'),
     path('orders/', orders, name='orders'),
     path('orders/delete/<int:order_id>/', delete_order, name='delete_order'),
     path('orders/delete/ticket/<int:ticket_id>/', views.delete_ticket, name='delete_ticket'),
-    
+    # path('check_task_status/<str:task_id>/', views.check_task_status, name='check_task_status'),
+    # path('save_booking_info/<str:task_id>/', views.save_booking_info, name='save_booking_info'),
     #評論
     path('edit_rating/<int:rating_id>/', views.edit_rating, name='edit_rating'),
     path('delete_rating/<int:rating_id>/', views.delete_rating, name='delete_rating'),
