@@ -55,3 +55,4 @@ beautifulsoup4
 pandas
 python-dateutil
 line-bot-sdk
+mariadb

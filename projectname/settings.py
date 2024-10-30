@@ -72,14 +72,27 @@ WSGI_APPLICATION = 'projectname.wsgi.application'
 
 import os
 import dj_database_url
+import django_heroku 
+  
+DATABASES = { 
+    'default': { 
+        'ENGINE': 'django.db.backends.postgresql_psycopg2', 
+        'NAME': 'zwv9ytrtncbjasbh', 
+        'USER': 'gar561q31hy9t0rm', 
+        'PASSWORD': 'cpd6v1qqmsewovvh', 
+        'HOST': 'c584md9egjnm02sk.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', 
+        'PORT': '3306', 
+    } 
+} 
 
-# 默认情况下使用 SQLite 数据库
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
+django_heroku.settings(locals()) 
+# # 默认情况下使用 SQLite 数据库
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
 
 # 如果 DATABASE_URL 存在且不是 SQLite，则使用 dj_database_url 配置 PostgreSQL
 if 'DATABASE_URL' in os.environ:
