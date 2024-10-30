@@ -26,17 +26,22 @@ import time
 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.3'
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-chrome_options.add_argument("--headless=old") #無頭模式
+# chrome_options.add_argument("--headless=old") #無頭模式
 chrome_options.add_argument("--window-size=1920,1080")
 chrome_options.add_argument(f"user-agent={user_agent}")
 # chrome_options.add_argument("--disable-notifications")
 
 chrome_options.add_argument('--disable-blink-features=AutomationControlled')
-chrome_options.add_argument("--disable-dev-shm-usage")
+# chrome_options.add_argument("--disable-dev-shm-usage")
 
 #以下是為了解決--headless=new跳出白框問題
-chrome_options.add_argument("--disable-gpu")  # 測試是否與 GPU 設置有關
-chrome_options.add_argument("--no-sandbox")  #禁用沙盒模式
+# chrome_options.add_argument("--disable-gpu")  # 測試是否與 GPU 設置有關
+# chrome_options.add_argument("--no-sandbox")  #禁用沙盒模式
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--remote-debugging-port=9222")
 # chrome_options.add_argument("--disable-software-rasterizer")  #禁用軟件渲染列表
 # #禁用背景加載
 # chrome_options.add_argument("--disable-background-timer-throttling")
@@ -356,9 +361,9 @@ class Worker(threading.Thread):
             if not result_data.empty:
                 self.lock.acquire()  # 鎖住寫檔操作
                 try:
-                    df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+                    df=pd.read_csv('settour.csv', encoding='utf-8',errors='ignore', index_col=0)
                     con = pd.concat([df,result_data],ignore_index=True)
-                    con.to_csv('settour.csv', encoding='utf-8',encoding_errors='ignore')
+                    con.to_csv('settour.csv', encoding='utf-8')
                 finally:
                     self.lock.release()  # 釋放鎖
                     
@@ -379,10 +384,10 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 4
+num_threads = 2
 workers = []
 
-df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df=pd.read_csv('settour.csv', encoding='utf-8',errors='ignore', index_col=0)
 for _ in range(num_threads):
     worker = Worker(my_queue, lock, df)
     worker.start()
@@ -396,17 +401,17 @@ for worker in workers:
 for worker in workers:
     worker.quit_driver()
 
-df1=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df1=pd.read_csv('settour.csv', encoding='utf-8',errors='ignore', index_col=0)
 for idx, ev, rv, gv in zip(indexes, earlierGoDatevalues, renew_datevalues, GoDatevalues):
     df1.at[idx, "earlierGoDate"]=ev
     df1.at[idx, "renew_date"]=rv
     df1.at[idx, "GoDate"]=gv
-df1.to_csv('settour.csv', encoding='utf-8',encoding_errors='ignore')
+df1.to_csv('settour.csv', encoding='utf-8')
 
 if len(AttractionSet)>0:       
-    df2=pd.read_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+    df2=pd.read_csv('attraction.csv', encoding='utf-8',errors='ignore', index_col=0)
     df2_Attract=set(df2['Attraction'])
     Attract=df2_Attract|AttractionSet
     Attractdata = pd.DataFrame({"Attraction":list(Attract)})
-    Attractdata.to_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore')
+    Attractdata.to_csv('attraction.csv', encoding='utf-8')
   

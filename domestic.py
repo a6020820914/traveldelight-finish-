@@ -21,11 +21,15 @@ from selenium.webdriver.support import expected_conditions as EC
 import time
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.binary_location = os.environ.get("GOOGLE_CHROME_BIN")
-chrome_options.add_argument("--headless=old") #無頭模式
-chrome_options.add_argument("--disable-notifications")
-chrome_options.add_argument("--disable-dev-shm-usage")
+# chrome_options.add_argument("--headless=old") #無頭模式
+# chrome_options.add_argument("--disable-notifications")
+# chrome_options.add_argument("--disable-dev-shm-usage")
+# chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--headless")
 chrome_options.add_argument("--no-sandbox")
-
+chrome_options.add_argument("--disable-dev-shm-usage")
+chrome_options.add_argument("--disable-gpu")
+chrome_options.add_argument("--remote-debugging-port=9222")
 #佈署所需要的設定
 from selenium.webdriver.chrome.service import Service
 service = Service(executable_path=os.environ.get("CHROMEDRIVER_PATH"))
@@ -278,9 +282,9 @@ class Worker(threading.Thread):
             if not result_data.empty:
                 self.lock.acquire()  # 鎖住寫檔操作
                 try:
-                    df=pd.read_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+                    df=pd.read_csv('domestic.csv', encoding='utf-8',errors='ignore', index_col=0)
                     con = pd.concat([df,result_data],ignore_index=True)
-                    con.to_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore')
+                    con.to_csv('domestic.csv', encoding='utf-8')
                 finally:
                     self.lock.release()  # 釋放鎖
                     
@@ -301,10 +305,10 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 4
+num_threads = 1
 workers = []
 
-df=pd.read_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df=pd.read_csv('domestic.csv', encoding='utf-8',errors='ignore', index_col=0)
 for _ in range(num_threads):
     worker = Worker(my_queue, lock, df)
     worker.start()
@@ -318,16 +322,16 @@ for worker in workers:
 for worker in workers:
     worker.quit_driver()
 
-df1=pd.read_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df1=pd.read_csv('domestic.csv', encoding='utf-8',errors='ignore', index_col=0)
 for idx, ev, rv, gv in zip(indexes, earlierGoDatevalues, renew_datevalues, GoDatevalues):
     df1.at[idx, "earlierGoDate"]=ev
     df1.at[idx, "renew_date"]=rv
     df1.at[idx, "GoDate"]=gv
-df1.to_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore')
+df1.to_csv('domestic.csv', encoding='utf-8')
 
 # if len(AttractionSet)>0:       
-#     df2=pd.read_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+#     df2=pd.read_csv('attraction.csv', encoding='utf-8',errors='ignore', index_col=0)
 #     df2_Attract=set(df2['Attraction'])
 #     Attract=df2_Attract|AttractionSet
 #     Attractdata = pd.DataFrame({"Attraction":list(Attract)})
-#     Attractdata.to_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore')
+#     Attractdata.to_csv('attraction.csv', encoding='utf-8')

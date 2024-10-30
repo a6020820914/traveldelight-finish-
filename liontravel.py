@@ -294,9 +294,9 @@ class Worker(threading.Thread):
           if not result_data.empty:
                 self.lock.acquire()  # 鎖住寫檔操作
                 try:
-                    df=pd.read_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+                    df=pd.read_csv('liontravel.csv', encoding='utf-8',errors='ignore', index_col=0)
                     con = pd.concat([df,result_data],ignore_index=True)
-                    con.to_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore')
+                    con.to_csv('liontravel.csv', encoding='utf-8')
                 finally:
                     self.lock.release()  # 釋放鎖
                
@@ -311,13 +311,13 @@ for Arrive in Arrivelist:
     my_queue.put(Arrive)
 
 # 建立10個工作者執行緒
-num_threads = 4
+num_threads = 2
 workers = []
 
 """
 取得資料(多工+鎖)
 """
-df=pd.read_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df=pd.read_csv('liontravel.csv', encoding='utf-8',errors='ignore', index_col=0)
 for _ in range(num_threads):
     worker = Worker(my_queue, lock, df)
     worker.start()
@@ -327,12 +327,12 @@ for _ in range(num_threads):
 for worker in workers:
     worker.join()
 
-df1=pd.read_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+df1=pd.read_csv('liontravel.csv', encoding='utf-8',errors='ignore', index_col=0)
 for idx, ev, rv, gv in zip(indexes, earlierGoDatevalues, renew_datevalues, GoDatevalues):
     df1.at[idx, "earlierGoDate"]=ev
     df1.at[idx, "renew_date"]=rv
     df1.at[idx, "GoDate"]=gv
-df1.to_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore')  
+df1.to_csv('liontravel.csv', encoding='utf-8')  
 
 if len(AttractionSet)>0:
     for r in ['', '高雄文化中心五福路正門口前集合上車', '台南美術2館(忠義小學大門對面)上車', 
@@ -343,10 +343,10 @@ if len(AttractionSet)>0:
             AttractionSet.remove(r)
         except:
             continue
-    df2=pd.read_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+    df2=pd.read_csv('attraction.csv', encoding='utf-8',errors='ignore', index_col=0)
     df2_Attract=set(df2['Attraction'])
     Attract=df2_Attract|AttractionSet
     Attractdata = pd.DataFrame({"Attraction":list(Attract)})
-    Attractdata.to_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore')      
+    Attractdata.to_csv('attraction.csv', encoding='utf-8')      
  
   

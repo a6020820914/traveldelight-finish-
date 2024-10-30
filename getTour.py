@@ -68,12 +68,12 @@ eztravel_thread.join()
 合併成一個gettour.csv檔案
 """                        
 #合併所有旅遊網擷取儲存的csv檔
-liontravel_df=pd.read_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
-settour_df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
-domestic_df=pd.read_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
-eztravel_df=pd.read_csv('eztravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+liontravel_df=pd.read_csv('liontravel.csv', encoding='utf-8',errors='ignore', index_col=0)
+settour_df=pd.read_csv('settour.csv', encoding='utf-8',errors='ignore', index_col=0)
+domestic_df=pd.read_csv('domestic.csv', encoding='utf-8',errors='ignore', index_col=0)
+eztravel_df=pd.read_csv('eztravel.csv', encoding='utf-8',errors='ignore', index_col=0)
 con = pd.concat([liontravel_df,settour_df, domestic_df, eztravel_df],ignore_index=True)
-con.to_csv('gettour.csv',encoding='utf-8',encoding_errors='ignore')
+con.to_csv('gettour.csv',encoding='utf-8')
 
 
 # """
@@ -86,7 +86,7 @@ con.to_csv('gettour.csv',encoding='utf-8',encoding_errors='ignore')
 # import django
 # django.setup()
 # from members.models import Tour, Site, Company, Region, TourSite, Attraction, TourAttraction
-# df=pd.read_csv('./gettour.csv', encoding='utf-8',encoding_errors='ignore')
+# df=pd.read_csv('./gettour.csv', encoding='utf-8',errors='ignore')
 # for i in range(len(list(df.iloc[:,0]))):
 #     row=list(df.iloc[i,:])
 #     try:
@@ -213,7 +213,7 @@ Attraction的資料表還沒建立，
 # import django
 # django.setup()
 # from members.models import Attraction
-# df=pd.read_csv('./attraction.csv', encoding='utf-8',encoding_errors='ignore')
+# df=pd.read_csv('./attraction.csv', encoding='utf-8',errors='ignore')
 # for a in list(df['Attraction']):
 #     try:
 #         if not Attraction.objects.filter(attraction_name=a).exists():
