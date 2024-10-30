@@ -356,9 +356,9 @@ class Worker(threading.Thread):
             if not result_data.empty:
                 self.lock.acquire()  # 鎖住寫檔操作
                 try:
-                    df=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
+                    df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
                     con = pd.concat([df,result_data],ignore_index=True)
-                    con.to_csv('settour.csv', encoding='ansi',errors='ignore')
+                    con.to_csv('settour.csv', encoding='utf-8',encoding_errors='ignore')
                 finally:
                     self.lock.release()  # 釋放鎖
                     
@@ -382,7 +382,7 @@ for Arrive in Arrivelist:
 num_threads = 4
 workers = []
 
-df=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
+df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
 for _ in range(num_threads):
     worker = Worker(my_queue, lock, df)
     worker.start()
@@ -396,17 +396,17 @@ for worker in workers:
 for worker in workers:
     worker.quit_driver()
 
-df1=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
+df1=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
 for idx, ev, rv, gv in zip(indexes, earlierGoDatevalues, renew_datevalues, GoDatevalues):
     df1.at[idx, "earlierGoDate"]=ev
     df1.at[idx, "renew_date"]=rv
     df1.at[idx, "GoDate"]=gv
-df1.to_csv('settour.csv', encoding='ansi',errors='ignore')
+df1.to_csv('settour.csv', encoding='utf-8',encoding_errors='ignore')
 
 if len(AttractionSet)>0:       
-    df2=pd.read_csv('attraction.csv', encoding='ansi', index_col=0)
+    df2=pd.read_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
     df2_Attract=set(df2['Attraction'])
     Attract=df2_Attract|AttractionSet
     Attractdata = pd.DataFrame({"Attraction":list(Attract)})
-    Attractdata.to_csv('attraction.csv', encoding='ansi',errors='ignore')
+    Attractdata.to_csv('attraction.csv', encoding='utf-8',encoding_errors='ignore')
   

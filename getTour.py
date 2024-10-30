@@ -68,81 +68,81 @@ eztravel_thread.join()
 合併成一個gettour.csv檔案
 """                        
 #合併所有旅遊網擷取儲存的csv檔
-liontravel_df=pd.read_csv('liontravel.csv', encoding='ansi', index_col=0)
-settour_df=pd.read_csv('settour.csv', encoding='ansi', index_col=0)
-domestic_df=pd.read_csv('domestic.csv', encoding='ansi', index_col=0)
-eztravel_df=pd.read_csv('eztravel.csv', encoding='ansi', index_col=0)
+liontravel_df=pd.read_csv('liontravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+settour_df=pd.read_csv('settour.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+domestic_df=pd.read_csv('domestic.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
+eztravel_df=pd.read_csv('eztravel.csv', encoding='utf-8',encoding_errors='ignore', index_col=0)
 con = pd.concat([liontravel_df,settour_df, domestic_df, eztravel_df],ignore_index=True)
-con.to_csv('gettour.csv',encoding='ansi',errors='ignore')
+con.to_csv('gettour.csv',encoding='utf-8',encoding_errors='ignore')
 
 
-"""
-將gettour.csv檔案匯入Django資料庫
-"""    
-import sys,os
-project_dir = "/projectname/"
-sys.path.append(project_dir)
-os.environ['DJANGO_SETTINGS_MODULE'] = 'projectname.settings'
-import django
-django.setup()
-from members.models import Tour, Site, Company, Region, TourSite, Attraction, TourAttraction
-df=pd.read_csv('./gettour.csv', encoding='ansi')
-for i in range(len(list(df.iloc[:,0]))):
-    row=list(df.iloc[i,:])
-    try:
-        if not Tour.objects.filter(NormGroupID = row[1]).exists(): #如果資料庫 沒有 該筆資料的狀況
-            comp_name = row[4]
-            company, _ = Company.objects.get_or_create(company_name=comp_name)           
-            site_name = row[3] #旅遊目的地
-            region_name = region_mapping[site_name]
-            if region_name:
-                region, _ = Region.objects.get_or_create(region_name=region_name)
-                toursite, _ = Site.objects.get_or_create(site_name=site_name, region=region)
-            tour, created = Tour.objects.get_or_create(
-                    NormGroupID = row[1],
-                    tourname = row[2], #旅遊標題名稱
-                    toursite = toursite,  #旅遊目的地
-                    company = company,  #旅行社
-                    tourlink = row[5],  
-                    tourimage = row[7], # 旅遊行程圖片
-                    tourday = int(row[8]), # 旅遊天數
-                    price = float(row[9]),  # 費用   
-                    earlierGoDate = row[10],   # 最早可出發日期 
-                    create_date = row[11].replace('/', '-'),   #建立行程時間
-                    renew_date = row[12].replace('/', '-'), #更新可出發日期時間                       
-                    tourSpecial = row[13], #旅遊行程特色描述
-                    goDate = row[14].lstrip('[').rstrip(']'),
-                    day = row[16],
-                    travelPoint = row[17], 
-                    breakfast = row[18], 
-                    lunch = row[19], 
-                    dinner = row[20], 
-                    hotel = row[21]
-                    )             
-            gosites = row[6].replace("'","").replace(" ","").lstrip('[').rstrip(']').split(',')
-            for site in gosites:
-                r_name = region_mapping.get(site)
-                if r_name:
-                    r, _ = Region.objects.get_or_create(region_name=r_name)
-                    gosite, _ = Site.objects.get_or_create(site_name=site, region=r)                    
-                TourSite.objects.create(tour=Tour.objects.get(NormGroupID = row[1]),site=gosite)
-            attractions = row[15].replace("'","").replace(" ","").lstrip('[').rstrip(']').split(',')
-            attractions = list(set(attractions))
-            for attract in attractions:
-                if Attraction.objects.filter(attraction_name = attract).exists():
-                    attractionid, _ = Attraction.objects.get_or_create(attraction_name=attract)                    
-                    TourAttraction.objects.create(tour=Tour.objects.get(NormGroupID = row[1]),attraction=attractionid)
-                else:
-                    continue
-        else:   #如果資料庫 已經有 該筆資料的狀況(更新 最早出發日期earlierGoDate & 更新時間renew_date )
-            tour=Tour.objects.filter(Q(NormGroupID = row[1])&Q(toursite = row[3]))
-            tour.earlierGoDate=row[10]
-            tour.renew_date=row[12].replace('/', '-')
-            tour.goDate=row[14].lstrip('[').rstrip(']')
-            tour.save()
-    except Exception as e:
-        print(e)
-        continue
+# """
+# 將gettour.csv檔案匯入Django資料庫
+# """    
+# import sys,os
+# project_dir = "/projectname/"
+# sys.path.append(project_dir)
+# os.environ['DJANGO_SETTINGS_MODULE'] = 'projectname.settings'
+# import django
+# django.setup()
+# from members.models import Tour, Site, Company, Region, TourSite, Attraction, TourAttraction
+# df=pd.read_csv('./gettour.csv', encoding='utf-8',encoding_errors='ignore')
+# for i in range(len(list(df.iloc[:,0]))):
+#     row=list(df.iloc[i,:])
+#     try:
+#         if not Tour.objects.filter(NormGroupID = row[1]).exists(): #如果資料庫 沒有 該筆資料的狀況
+#             comp_name = row[4]
+#             company, _ = Company.objects.get_or_create(company_name=comp_name)           
+#             site_name = row[3] #旅遊目的地
+#             region_name = region_mapping[site_name]
+#             if region_name:
+#                 region, _ = Region.objects.get_or_create(region_name=region_name)
+#                 toursite, _ = Site.objects.get_or_create(site_name=site_name, region=region)
+#             tour, created = Tour.objects.get_or_create(
+#                     NormGroupID = row[1],
+#                     tourname = row[2], #旅遊標題名稱
+#                     toursite = toursite,  #旅遊目的地
+#                     company = company,  #旅行社
+#                     tourlink = row[5],  
+#                     tourimage = row[7], # 旅遊行程圖片
+#                     tourday = int(row[8]), # 旅遊天數
+#                     price = float(row[9]),  # 費用   
+#                     earlierGoDate = row[10],   # 最早可出發日期 
+#                     create_date = row[11].replace('/', '-'),   #建立行程時間
+#                     renew_date = row[12].replace('/', '-'), #更新可出發日期時間                       
+#                     tourSpecial = row[13], #旅遊行程特色描述
+#                     goDate = row[14].lstrip('[').rstrip(']'),
+#                     day = row[16],
+#                     travelPoint = row[17], 
+#                     breakfast = row[18], 
+#                     lunch = row[19], 
+#                     dinner = row[20], 
+#                     hotel = row[21]
+#                     )             
+#             gosites = row[6].replace("'","").replace(" ","").lstrip('[').rstrip(']').split(',')
+#             for site in gosites:
+#                 r_name = region_mapping.get(site)
+#                 if r_name:
+#                     r, _ = Region.objects.get_or_create(region_name=r_name)
+#                     gosite, _ = Site.objects.get_or_create(site_name=site, region=r)                    
+#                 TourSite.objects.create(tour=Tour.objects.get(NormGroupID = row[1]),site=gosite)
+#             attractions = row[15].replace("'","").replace(" ","").lstrip('[').rstrip(']').split(',')
+#             attractions = list(set(attractions))
+#             for attract in attractions:
+#                 if Attraction.objects.filter(attraction_name = attract).exists():
+#                     attractionid, _ = Attraction.objects.get_or_create(attraction_name=attract)                    
+#                     TourAttraction.objects.create(tour=Tour.objects.get(NormGroupID = row[1]),attraction=attractionid)
+#                 else:
+#                     continue
+#         else:   #如果資料庫 已經有 該筆資料的狀況(更新 最早出發日期earlierGoDate & 更新時間renew_date )
+#             tour=Tour.objects.filter(Q(NormGroupID = row[1])&Q(toursite = row[3]))
+#             tour.earlierGoDate=row[10]
+#             tour.renew_date=row[12].replace('/', '-')
+#             tour.goDate=row[14].lstrip('[').rstrip(']')
+#             tour.save()
+#     except Exception as e:
+#         print(e)
+#         continue
 
 
 
@@ -213,7 +213,7 @@ Attraction的資料表還沒建立，
 # import django
 # django.setup()
 # from members.models import Attraction
-# df=pd.read_csv('./attraction.csv', encoding='ansi')
+# df=pd.read_csv('./attraction.csv', encoding='utf-8',encoding_errors='ignore')
 # for a in list(df['Attraction']):
 #     try:
 #         if not Attraction.objects.filter(attraction_name=a).exists():
