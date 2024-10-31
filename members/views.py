@@ -18,7 +18,9 @@ from .models import Member, MemberProfile  # 确保模型导入正确
 from django.urls import reverse
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
+from members.setup_chromedriver import initialize_driver
 
+driver = initialize_driver()
 User = get_user_model()
 #首頁index.html
 def index(request):

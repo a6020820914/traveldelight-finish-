@@ -125,5 +125,57 @@
     <div id="submission-status"></div>  <!-- 新增狀態顯示區域 -->  
 
     
+    <script>  
+        // 先定義票據 ID  
+        const ticket = {  
+            id: "{{ ticket.id }}",  // 確保 ticket.id 存在於模板上下文  
+        };  
+
+        document.getElementById('guess-form').addEventListener('submit', function(event) {  
+            event.preventDefault();  // 防止表單提交刷新頁面  
+
+            let guess = parseInt(document.getElementById('guess').value);  // 轉換為整數  
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;  
+
+            // 檢查用戶輸入是否有效  
+            if (isNaN(guess) || guess < 1 || guess > 100) {  
+                document.getElementById('guess-result').innerHTML = `<div class="alert">請輸入一個有效的數字 (1-100)。</div>`;  
+                return;  // 終止執行  
+            }  
+
+            // 顯示提交狀態  
+            document.getElementById('submission-status').innerHTML = `<div class="info">正在提交猜測...</div>`;  
+
+            // 發送 AJAX 請求  
+            fetch(`/order_view/${ticket.id}/`, {  
+                method: 'POST',  
+                headers: {  
+                    'Content-Type': 'application/json',  
+                    'X-CSRFToken': csrfToken  
+                },  
+                body: JSON.stringify({  
+                    guess: guess,  
+                    guess_submit: true  // 標識為猜數字提交  
+                })  
+            })  
+            .then(response => {  
+                if (!response.ok) {  
+                    throw new Error('Network response was not ok');  
+                }  
+                return response.json();  
+            })  
+            .then(data => {  
+                document.getElementById('guess-result').innerHTML = `<div class="alert">${data.message}</div>`;  
+                // 清除提交狀態消息  
+                document.getElementById('submission-status').innerHTML = `<div class="info">您的猜測已提交：${guess}</div>`;  
+            })  
+            .catch(error => {  
+                console.error('Error:', error);  
+                document.getElementById('guess-result').innerHTML = `<div class="alert">發生錯誤，請稍後再試。</div>`;  
+                // 清除提交狀態消息  
+                document.getElementById('submission-status').innerHTML = `<div class="info">發生錯誤，請稍後再試。</div>`;  
+            });  
+        });  
+    </script>  
 </body>  
 </html>
